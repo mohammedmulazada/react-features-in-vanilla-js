@@ -28,7 +28,125 @@ I have made a todo list that can be found [here.](https://codesandbox.io/s/qqopp
 
 As you can see, all I did was define the logic around the todo list. Where the new todo should be added, what to do if the input is empty.
 
-React takes care of the rendering of the todo tasks.
+React takes care of the rendering of the todo tasks. In the example below, you see a simplified method of rendering each todo value in a paragraph element.
+
+```js
+<div className='todos'>
+	{todos && todos.maptodo => (<p>{todo.value}</p>)}
+</div>
+```
+
+All this block of code does is loop over the amount of todos. For every todo, it will create a new div element and adds buttons and the todo value.
+
+This might not seem special, but recreating this in vanilla JS might show why this is so nice.
+
+### Vanilla JS
+
+We can recreate the element rendering based on the data in Vanilla JS.
+
+First, lets look at how one would normally render element based on data, without a library or self written framework.
+
+Let's say you have a todo list as well, and the data looks like this:
+
+```js
+const todos = ["Do the dishes", "Write this sentence", "Do groceries"]
+```
+
+This is what you would have to do, assuming you have a div in your HTML with a classname of 'todos'
+
+```js
+const todos = ["Do the dishes", "ZWrite this sentence", "Do groceries"]
+const container = document.querySelector(".todos")
+
+todos.map(todo => {
+	const paragraph = document.createElement("p")
+	paragraph.textContent = todo
+
+	return container.appendChild(paragraph)
+})
+```
+
+#### Main differences at this point in time
+
+As you can see, right now, between the two code blocks from React and Vanilla JS, it doesn't take much more work to do it in Vanilla JS. You might wonder, why use React when it can be done this easily in Vanilla JS?
+
+It comes down to Reactivity.
+
+### Making your own virtual DOM
+
+```js
+;(function() {
+	"use strict"
+
+	function getArgs(args) {
+		if (args.length === 1) {
+			return [undefined, args[0]]
+		}
+
+		return [args[0], args[1]]
+	}
+
+	function convertToTextNodeIfNodeIsString(possibleString) {
+		return typeof possibleString === "string"
+			? document.createTextNode(possibleString)
+			: possibleString
+	}
+
+	function camelToKebab(camel) {
+		return camel.replace(/([A-Z])/g, g => `-${g[0].toLowerCase()}`)
+	}
+
+	function createElement(tag, ...args) {
+		const [attributes, children] = getArgs(args)
+
+		const node = document.createElement(tag)
+
+		if (attributes) {
+			for (let attribute in attributes) {
+				if (attribute === "className") {
+					node.classList.add(attributes[attribute])
+				} else {
+					node.setAttribute(
+						camelToKebab(attribute),
+						attributes[attribute]
+					)
+				}
+			}
+		}
+
+		if (children) {
+			const childNodes = Array.isArray(children) ? children : [children]
+			childNodes.forEach(child =>
+				node.appendChild(convertToTextNodeIfNodeIsString(child))
+			)
+		}
+
+		return node
+	}
+
+	const div = createElement.bind(null, "div")
+	const p = createElement.bind(null, "p")
+	const ul = createElement.bind(null, "ul")
+	const li = createElement.bind(null, "li")
+	const a = createElement.bind(null, "a")
+
+	const items = ["foo", "bar", "baz"]
+
+	const container = div(
+		{ className: "hello" },
+		div(
+			{ className: "ul-container", dataRef: "hello" },
+			ul(
+				items.map(item =>
+					li(a({ className: "li-link", href: `${item}` }, item))
+				)
+			)
+		)
+	)
+
+	document.body.appendChild(container)
+})()
+```
 
 ---
 
