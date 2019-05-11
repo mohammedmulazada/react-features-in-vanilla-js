@@ -184,7 +184,15 @@ This is where reactivity comes in.
 
 ### How React does it
 
+Before talking about Reactivity, we need to talk a little bit about state.
+
 State is a core feature of React. State is used for all kinds of situations, for example, toggling a menu could be managed by state.
+
+There is a good reason for using state, and that reason is called: **a single source of truth.**
+
+You see, when you make an application, you don't want the logic and values to be all over the place. You want the values to come from one place and one place only.
+
+This is where state comes in. We update state values by making a copy of the previous value and updating it, which makes the state immutable. To be clear, you can change values through Javascript directly, but this defeats the whole point.
 
 In this React example (using the new Hooks), we are incrementing a value by 1.
 
