@@ -280,7 +280,38 @@ For this example, we will be using Javascript Proxies. I want to preface this th
 
 _The Proxy object is used to define custom behavior for fundamental operations (e.g. property lookup, assignment, enumeration, function invocation, etc)._
 
+Apparently, with Proxies we can override default behaviours, we can for example intercept an operation on an object to add custom logic on each operation.
+
+##### Example
+
+Here is an example to help us understand this better.
+
+Let's see we have an object, and we want to access a property on that object, if the property exists, we want to return the value, however, if it doesn't exist, we want to return a custom message.
+
+```js
+const handler = {
+	get: (target, name) => {
+		if (name in target) {
+			return target[name]
+		} else {
+			return 'Error: this proves this works'
+		}
+	}
+}
+
+let p = new Proxy({}, handler)
+
+p.foo = 'bar'
+
+console.log(p.foo) // returns 'bar'
+console.log(p.nope) // returns 'Error: this proves this works'
+```
+
+---
+
 So, this means that in our example we can have something happen while a function is called.
+
+First we create a function and give it a state parameter, which we we later can fill in with our state.
 
 ```js
     const createState = (state) => {
@@ -310,7 +341,7 @@ const render = () => {
 }
 ```
 
-And finally, a function that updates the state based on what we just typed inn.
+And finally, a function that updates the state based on what we just typed in.
 
 ```js
     const listener = (event) => {
@@ -320,3 +351,4 @@ And finally, a function that updates the state based on what we just typed inn.
    document.querySelector('[data-model="name"]').addEventListener('keyup', listener);  
    document.querySelector('[data-model="title"]').addEventListener('keyup', listener);
 ```
+
