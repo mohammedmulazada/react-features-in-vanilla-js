@@ -352,3 +352,14 @@ And finally, a function that updates the state based on what we just typed in.
    document.querySelector('[data-model="title"]').addEventListener('keyup', listener);
 ```
 
+And there we have it! A simple and effective way to have Reactivity and state management.
+
+## Conclusion
+
+As we can see, there is a good argument for using React (or similair frameworks/libraries). It mostly boils down to using an opionated framework that abstracts a lot of the more cumbersome and repetitive work.
+
+It is definitely possible to use vanilla Javascript and depending on the scale of the job it could be even better than using a framework. React also is not the only and best choice, there are many frameworks out there achieving the same and each is great in their own right. React simply is the largest one right now and that's a great reason to work with it.
+
+Let's also not forget how lovely it is to use React when working in teams. React is great for larger teams building a large scale product.
+
+But as always, every choice we make has to be weighed beforehand. React and such are great tools that we use, but each of those choices we are stuck with. It means that you, your team, the customer, the customers developers, future maintainers will all be stuck to the choices we made, and I think it is very important to think of these things.
