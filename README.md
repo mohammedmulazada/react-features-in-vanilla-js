@@ -55,7 +55,7 @@ const todos = ["Do the dishes", "Write this sentence", "Do groceries"]
 This is what you would have to do, assuming you have a div in your HTML with a classname of 'todos'
 
 ```js
-const todos = ["Do the dishes", "ZWrite this sentence", "Do groceries"]
+const todos = ["Do the dishes", "Write this sentence", "Do groceries"]
 const container = document.querySelector(".todos")
 
 todos.map(todo => {
@@ -70,9 +70,11 @@ todos.map(todo => {
 
 As you can see, right now, between the two code blocks from React and Vanilla JS, it doesn't take much more work to do it in Vanilla JS. You might wonder, why use React when it can be done this easily in Vanilla JS?
 
-It comes down to Reactivity.
+It comes down to Reactivity, which we will cover later.
 
 ### Making your own virtual DOM
+
+The code below is a vanilla virtual DOM that will enable you to create HTML Elements with Javascript functions.
 
 ```js
 ;(function() {
@@ -225,5 +227,96 @@ This is why the number changes every time you click.
 
 In order to get the same behaviour in Javascript, we need to add some logic that does not exist yet.
 
+I actually found a great example online by Francesco Esposito where he goes into two-way data binding _and_ reactivity. He uses an advanced Javascript future Proxy which I am very excited to try.
+
+[The demo can be found here.](https://stackblitz.com/edit/two-way-data-binding-poc)
+
+Assuming we have an HTML markup like this:
+
+```html
+<div class="field">
+	<label for="name">Enter your name:</label>
+	<input id="name" type="text" name="name" data-model="name" />
+</div>
+
+<div class="field">
+	<label for="title">Enter your title:</label>
+	<input id="title" type="text" name="title" data-model="title" />
+</div>
+
+<div class="results">
+	<h1 data-binding="name"></h1>
+	<h2 data-binding="title"></h2>
+</div>
+```
+
+And a state where we put the initial values:
+
 ```js
+const state = {
+	name: "Mohammed",
+	title: "Front-end Developer",
+}
+```
+
+It would be easy to add the Javascript values to the HTML elements, **but only the first time**.
+
+```js
+document.querySelector('[data-binding="name"]').innerHTML = state.name
+document.querySelector('[data-binding="title"]').innerHTML = state.title
+document.querySelector('[data-model="name"]').value = state.name
+document.querySelector('[data-model="title"]').value = state.title
+```
+
+But what we need is a way to reflect any possible changes in the state to the HTML elements.
+
+#### Proxy
+
+For this example, we will be using Javascript Proxies. I want to preface this that I know there are other available options that will work with all browsers. For this example though, I find it more useful to learn and explain something new than it is to use the old way.
+
+##### What does Proxy do?
+
+[According to the MDN Docs on Javascript Proxies:](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy)
+
+_The Proxy object is used to define custom behavior for fundamental operations (e.g. property lookup, assignment, enumeration, function invocation, etc)._
+
+So, this means that in our example we can have something happen while a function is called.
+
+```js
+    const createState = (state) => {
+      return new Proxy(state, {
+        set(target, property, value) {
+          target[property] = value; // default set behaviour
+          render(); // updates the view every time the state changes
+          return true;
+    }
+      });
+    };
+
+    const state = createState({
+      name = 'Mohammed'
+      title = 'Front-end Engineer'
+    });
+```
+
+And then we create a function that is responsible for adding the state values to the HTML objects.
+
+```js
+const render = () => {
+	document.querySelector('[data-binding="name"]').innerHTML = state.name
+	document.querySelector('[data-binding="title"]').innerHTML = state.title
+	document.querySelector('[data-model="name"]').value = state.name
+	document.querySelector('[data-model="title"]').value = state.title
+}
+```
+
+And finally, a function that updates the state based on what we just typed inn.
+
+```js
+    const listener = (event) => {
+      state[event.target.dataset.model] = event.target.value;
+    });
+
+   document.querySelector('[data-model="name"]').addEventListener('keyup', listener);  
+   document.querySelector('[data-model="title"]').addEventListener('keyup', listener);
 ```
