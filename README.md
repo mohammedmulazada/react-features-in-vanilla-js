@@ -150,6 +150,12 @@ The code below is a vanilla virtual DOM that will enable you to create HTML Elem
 })()
 ```
 
+### A popular module
+
+Making your own Virtual DOM can be daunting and/or very time extensive. A popular module that I find great is [virtual-dom](https://www.npmjs.com/package/virtual-dom).
+
+This is one of the most popular vanilla-js virtual doms and has excellent documentation. We will be using this in our example app demo later on.
+
 ---
 
 ## Reactivity
@@ -302,14 +308,14 @@ const handler = {
 		if (name in target) {
 			return target[name]
 		} else {
-			return 'Error: this proves this works'
+			return "Error: this proves this works"
 		}
-	}
+	},
 }
 
 let p = new Proxy({}, handler)
 
-p.foo = 'bar'
+p.foo = "bar"
 
 console.log(p.foo) // returns 'bar'
 console.log(p.nope) // returns 'Error: this proves this works'
@@ -356,11 +362,281 @@ And finally, a function that updates the state based on what we just typed in.
       state[event.target.dataset.model] = event.target.value;
     });
 
-   document.querySelector('[data-model="name"]').addEventListener('keyup', listener);  
+   document.querySelector('[data-model="name"]').addEventListener('keyup', listener);
    document.querySelector('[data-model="title"]').addEventListener('keyup', listener);
 ```
 
 And there we have it! A simple and effective way to have Reactivity and state management.
+
+---
+
+## Making a demo
+
+We are going to be creating a todo app using all of the things we just learned.
+
+First off, we are going to define our HTML structure.
+
+```html
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Todo-list</title>
+		<meta charset="UTF-8" />
+	</head>
+
+	<body>
+		<div id="app"></div>
+
+		<script src="src/index.js"></script>
+	</body>
+</html>
+```
+
+**The final result will be:**
+
+A title
+An input
+A submit button
+
+The todo task - Delete button
+The todo task - Delete button
+The todo task - Delete button
+
+For this demo we will be using the virtual-dom module we saw earlier. Here is an example of how this module works.
+
+```js
+import { create, h } from "virtual-dom"
+
+const render = state => {
+	const children = state.list.map(t => h("li", {}, [t]))
+	return h("ul", {}, children)
+}
+
+const INITIAL_STATE = {
+	list: ["first", "second"],
+}
+
+let tree = render(INITIAL_STATE)
+let rootNode = create(tree)
+
+document.body.appendChild(rootNode)
+```
+
+Which will return a ul with li children using the 'first' and 'second' as data as defined in the INITIAL_STATE variable.
+
+### Updating the DOM
+
+We need a method to update the DOM when something changes, for example, when a new `<li>` gets added to the list.
+
+Virtual-dom adds a function called `patches` that updates the DOM to what the state is. It also adds a function called `diff` that looks at the existing DOM and the new data and can spot the differences.
+
+[Source.
+](https://github.com/Matt-Esch/virtual-dom/blob/master/vdom/README.md)
+We need these to the update the DOM with the newly added todos.
+
+```js
+// The function receives the state
+const updateDom = state => {
+	// newTree is responsible for holding and rendering the new state
+	const newTree = render(state)
+	// whereas patches is responsible for looking at the old tree and the new tree and looking at what's different
+	const patches = diff(tree, newTree)
+
+	// then we update the old tree to hold the new value
+	tree = newTree
+	// and finally we change the DOM to match with the new data
+	rootNode = patch(rootNode, patches)
+}
+```
+
+---
+
+Since we know what our HTML will look like, we can define the state.
+
+```js
+const INITIAL_STATE = {
+	todos: [],
+	todoInputText: "",
+}
+```
+
+Now we have the state itself and a method to update the DOM, but no method of updating the state yet. We can go ahead and make this now, using the proxy we learned about earlier.
+
+```js
+// this function takes the state and a function as arguments
+export default ({ target, listener }) => {
+	// we define the observable
+	let observable
+
+	const set = (target, name, value) => {
+		target[name] = value
+		// we pass the value through a function we give as argument, which will be the updateDom function
+		listener(observable)
+		return true
+	}
+
+	const get = (target, name) => {
+		return target[name]
+	}
+
+	const handler = {
+		set,
+		get,
+	}
+
+	observable = new Proxy(target, handler)
+
+	return observable
+}
+```
+
+Okay, now we can focus on actually rendering the lists based on our input.
+
+We will create `view` folder, since it is responsible for rendering the list.
+
+In the view folder, we create a list, form and index.js.
+
+---
+
+### List
+
+Here we create a file in which we define what and how the list should render. 
+
+```js
+import { h } from "virtual-dom"
+
+export default state => {
+	// when clicking on delete, we delete the specific item.
+	const onRemove = index => {
+		state.todos = [
+			// select all of the items until the specific one
+			...state.todos.slice(0, index),
+			// return all the others after the index
+			...state.todos.slice(index + 1),
+		]
+	}
+
+	// here we define a button and it's logic
+	const createDeleteButton = (text, index) =>
+		h(
+			"button",
+			{
+				onclick: () => onRemove(index),
+			},
+			[`${text} (click to delete)`]
+		)
+
+	// for every todo item, we create a deletebutton and pass it the index, so that we can delete the correct one.
+	const elements = state.todos.map((t, index) => createDeleteButton(t, index))
+
+	return h("div", {}, [h("div", {}, [elements])])
+}
+```
+
+### Form
+
+
+
+```js
+import { h } from "virtual-dom"
+
+export default state => {
+	//when clicking the add button
+	const onAddClick = () => {
+		// and if there is text filled into the input
+		if (state.todoInputText) {
+			// we add that value to the todos state
+			state.todos = [...state.todos, state.todoInputText]
+			state.todoInputText = ""
+		}
+	}
+
+	// this is to update the state based on the value
+	const onInputValueChange = event => {
+		state.todoInputText = event.target.value
+	}
+
+	//adds an add button
+	const addButton = h(
+		"button",
+		{
+			// which is only enabled once there is state in the input, which means something has been filled in.
+			onclick: onAddClick,
+			disabled: !state.todoInputText,
+		},
+		["Add Todo"]
+	)
+
+	// defines the input
+	const input = h("input", {
+		placeholder: "What do you have todo?",
+		type: "text",
+		// the value matches the state (controlled component)
+		value: state.todoInputText,
+		// on change it calls the onInputValueChange function
+		oninput: onInputValueChange,
+	})
+
+	// we put it all together here
+	return h("nav", {}, [
+		h("div", {}, [
+			h("div", {}, [h("a", {}, ["Todo-list"])]),
+			h("form", {}, [h("div", {}, [input]), addButton]),
+		]),
+	])
+}
+```
+
+And here we pull the previous two functions together and put them in a render function.
+
+```js
+import { h } from "virtual-dom"
+
+import form from "./form"
+import list from "./list"
+
+export const render = state => {
+	return h("div", {}, [form(state), list(state)])
+}
+```
+
+### index.js
+
+And now we can pull in our functions and make it all work!
+
+```js
+import { patch, create, diff } from "virtual-dom"
+import { render } from "./view"
+import observable from "./observable"
+
+// this gets called when the state changes and is responsible for updating the DOM
+const updateDom = state => {
+	const newTree = render(state)
+	const patches = diff(tree, newTree)
+
+	tree = newTree
+	rootNode = patch(rootNode, patches)
+}
+
+// we define the initial state here
+const INITIAL_STATE = {
+	todos: [],
+	todoInputText: "",
+}
+
+// this is where the state gets watched through a Proxy
+const state = observable({
+	target: INITIAL_STATE,
+	listener: updateDom,
+})
+
+let tree = render(state)
+let rootNode = create(tree)
+
+document.body.appendChild(rootNode)
+```
+
+Final result is available here: https://codesandbox.io/embed/proud-sun-6kt0r?codemirror=1
 
 ## Conclusion
 
