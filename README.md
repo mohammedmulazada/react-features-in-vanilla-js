@@ -393,7 +393,7 @@ First off, we are going to define our HTML structure.
 ```
 
 **The final result will be:**
-
+```
 A title
 An input
 A submit button
@@ -401,6 +401,9 @@ A submit button
 The todo task - Delete button
 The todo task - Delete button
 The todo task - Delete button
+```
+
+![example](http://i.imgur.com/vJkCNqK.jpg)
 
 For this demo we will be using the virtual-dom module we saw earlier. Here is an example of how this module works.
 
