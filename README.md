@@ -427,6 +427,8 @@ document.body.appendChild(rootNode)
 
 Which will return a ul with li children using the 'first' and 'second' as data as defined in the INITIAL_STATE variable.
 
+![image](http://i.imgur.com/mNlTn3s.jpg)
+
 ### Updating the DOM
 
 We need a method to update the DOM when something changes, for example, when a new `<li>` gets added to the list.
